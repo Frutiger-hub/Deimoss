@@ -48,11 +48,11 @@
     <!-- Modal de Confirmação / Alerta -->
     <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-200 dark:border-slate-700 transform transition-all">
-            <h3 id="modal-title" class="text-xl font-bold text-slate-900 dark:text-white mb-2">Confirmar Ação</h3>
-            <p id="modal-message" class="text-slate-500 dark:text-slate-400 text-sm mb-6">Deseja realmente prosseguir?</p>
+            <h3 id="modal-title" class="text-xl font-bold text-slate-900 dark:text-white mb-2">Aviso</h3>
+            <p id="modal-message" class="text-slate-500 dark:text-slate-400 text-sm mb-6"></p>
             <div class="flex gap-3">
-                <button id="modal-cancel-btn" onclick="closeModal()" class="flex-1 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition">Cancelar</button>
-                <button id="modal-confirm-btn" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg transition">Confirmar</button>
+                <button id="modal-cancel-btn" onclick="closeModal()" class="flex-1 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition hidden">Cancelar</button>
+                <button id="modal-confirm-btn" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-lg transition">OK</button>
             </div>
         </div>
     </div>
@@ -127,7 +127,7 @@
                     </div>
 
                     <button onclick="salvarRegistro()" id="btn-salvar" disabled class="w-full py-4 rounded-2xl font-black text-white bg-slate-400 cursor-not-allowed transition shadow-lg flex justify-center items-center gap-2 transform active:scale-[0.98]">
-                        <span id="btn-text">A INICIALIZAR...</span>
+                        <span id="btn-text">A CONECTAR...</span>
                         <div id="btn-spinner" class="spinner hidden"></div>
                     </button>
                 </div>
@@ -188,8 +188,9 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, doc, addDoc, deleteDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
-        // Configurações fornecidas por ti
+        // Chaves fornecidas
         const userFirebaseConfig = {
             apiKey: "AIzaSyACzHAv5xKUkNRSfcnAwSQxg1CTRnm8emU",
             authDomain: "deimos-1fdc4.firebaseapp.com",
@@ -210,11 +211,18 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         
+        // Analytics pode falhar em ambientes restritos ou com AdBlockers
+        try {
+            getAnalytics(app);
+        } catch (e) {
+            console.warn("Analytics não disponível.");
+        }
+        
         const META_DIARIA_MINUTOS = 510; // 8h30m
         let bancoDeDados = [];
         let userId = null;
 
-        // REGRA 3: Auth ANTES de queries
+        // Inicialização robusta de Autenticação
         const initAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -223,8 +231,18 @@
                     await signInAnonymously(auth);
                 }
             } catch (err) {
-                console.error("Erro crítico na autenticação:", err);
-                showModal("Erro de Conexão", "Não foi possível ligar ao Firebase. Verifica a tua ligação.");
+                console.error("Erro Firebase Auth:", err);
+                
+                let msg = "Não foi possível ligar ao Firebase.";
+                if (err.code === 'auth/operation-not-allowed') {
+                    msg = "O 'Login Anónimo' não está ativado no teu Console do Firebase (Authentication > Sign-in method).";
+                } else if (err.code === 'auth/unauthorized-domain') {
+                    msg = "Este domínio não está na lista de 'Domínios Autorizados' no teu Firebase Console.";
+                } else {
+                    msg += ` Detalhes: ${err.code}`;
+                }
+                
+                showModal("Erro de Conexão", msg);
             }
         };
 
@@ -234,7 +252,6 @@
             if (user) {
                 userId = user.uid;
                 ouvirBanco();
-                // Ativar o botão quando logado
                 btn.disabled = false;
                 btn.className = "w-full py-4 rounded-2xl font-black text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-600/30 flex justify-center items-center gap-2 transform active:scale-[0.98]";
                 btnText.textContent = "REGISTRAR PONTO";
@@ -252,18 +269,15 @@
                 bancoDeDados.sort((a, b) => new Date(b.data) - new Date(a.data));
                 filtrarBanco();
             }, (err) => {
-                console.error("Erro no Firestore Snapshot:", err);
+                console.error("Erro Firestore:", err);
                 if (err.code === 'permission-denied') {
-                    showModal("Erro de Permissão", "Configura as regras do Firestore no Console para permitir leitura/escrita.");
+                    showModal("Erro de Permissão", "As Regras do Firestore (Rules) bloqueiam o acesso. Altera para 'allow read, write: if request.auth != null;'.");
                 }
             });
         };
 
         window.salvarRegistro = async () => {
-            if (!userId) {
-                showModal("Aguarde", "A autenticação ainda está a processar. Tenta novamente em segundos.");
-                return;
-            }
+            if (!userId) return;
             
             const btn = document.getElementById('btn-salvar');
             const btnText = document.getElementById('btn-text');
@@ -276,13 +290,11 @@
             const al2 = document.getElementById('in-volta-almoco').value;
             const sai = document.getElementById('in-saida').value;
 
-            // Validação explícita
             if (!nome || !data || !ent || !sai) {
-                showModal("Campos em Falta", "Preenche o Nome, Data, Entrada e Saída Final.");
+                showModal("Aviso", "Preenche os campos obrigatórios (Nome, Data, Entrada e Saída).");
                 return;
             }
 
-            // UI Feedback
             btn.disabled = true;
             btnText.classList.add('hidden');
             btnSpinner.classList.remove('hidden');
@@ -298,12 +310,7 @@
             }
 
             const payload = {
-                nome, 
-                data, 
-                entrada: ent, 
-                idaAlmoco: al1 || "", 
-                voltaAlmoco: al2 || "", 
-                saida: sai,
+                nome, data, entrada: ent, idaAlmoco: al1 || "", voltaAlmoco: al2 || "", saida: sai,
                 totalTrabalhado: total,
                 saldo: total - META_DIARIA_MINUTOS,
                 ts: Date.now()
@@ -311,11 +318,9 @@
 
             try {
                 await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'registros'), payload);
-                // Limpar campos após sucesso
                 ['in-entrada','in-ida-almoco','in-volta-almoco','in-saida'].forEach(id => document.getElementById(id).value = '');
             } catch (err) {
-                console.error("Erro ao salvar:", err);
-                showModal("Erro ao Salvar", "Não foi possível registar o ponto. Verifica as regras do teu banco de dados.");
+                showModal("Erro ao Gravar", `Falha ao guardar os dados: ${err.code}`);
             } finally {
                 btn.disabled = false;
                 btnText.classList.remove('hidden');
@@ -324,24 +329,24 @@
         };
 
         window.excluirRegistro = (id) => {
-            showModal("Eliminar Ponto", "Desejas apagar este registo permanentemente?", async () => {
+            showModal("Eliminar Registo", "Desejas apagar este ponto definitivamente?", async () => {
                 try {
                     await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', id));
                     closeModal();
                 } catch (err) { console.error(err); }
-            });
+            }, true);
         };
 
         window.confirmarLimpeza = () => {
-            showModal("Limpar Tudo", "Apagar TODOS os teus registos permanentemente?", async () => {
+            showModal("Limpar Tudo", "Desejas apagar TODOS os teus registos?", async () => {
                 try {
                     const coll = collection(db, 'artifacts', appId, 'users', userId, 'registros');
                     const snap = await getDocs(coll);
-                    const batchDeletes = snap.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', d.id)));
-                    await Promise.all(batchDeletes);
+                    const batch = snap.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', d.id)));
+                    await Promise.all(batch);
                     closeModal();
                 } catch (err) { console.error(err); }
-            }, "bg-red-500 hover:bg-red-600");
+            }, true, "bg-red-500 hover:bg-red-600");
         };
 
         // Helpers
@@ -389,7 +394,7 @@
                     <td class="px-6 py-5 text-center font-bold text-slate-700 dark:text-slate-200">${convHora(reg.totalTrabalhado || 0)}h</td>
                     <td class="px-6 py-5 text-center font-black ${cor}">${saldoVal >= 0 ? '+' : '-'}${convHora(saldoVal)}h</td>
                     <td class="px-6 py-5 text-center">
-                        <button onclick="excluirRegistro('${reg.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                        <button onclick="excluirRegistro('${reg.id}')" class="text-slate-300 hover:text-red-500">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </td>
@@ -404,44 +409,40 @@
             ds.className = `text-4xl font-black ${tSaldo > 0 ? 'text-green-500' : (tSaldo < 0 ? 'text-red-500' : 'text-slate-400')}`;
         };
 
-        // UI Management
+        // UI Core
         setInterval(() => {
             const a = new Date();
             document.getElementById('txt-hora').textContent = a.toLocaleTimeString('pt-PT');
             document.getElementById('txt-data').textContent = a.toLocaleDateString('pt-PT', { weekday: 'long', day: '2-digit', month: 'short' });
         }, 1000);
 
-        const showModal = (t, m, c, confirmClass = "bg-blue-600 hover:bg-blue-700") => {
+        const showModal = (t, m, callback, showCancel = false, confirmClass = "bg-blue-600 hover:bg-blue-700") => {
             document.getElementById('modal-title').textContent = t;
             document.getElementById('modal-message').textContent = m;
             document.getElementById('custom-modal').classList.remove('hidden');
             
-            const confirmBtn = document.getElementById('modal-confirm-btn');
-            confirmBtn.className = `flex-1 py-2.5 rounded-xl font-bold text-white shadow-lg transition ${confirmClass}`;
+            const cBtn = document.getElementById('modal-confirm-btn');
+            cBtn.className = `flex-1 py-2.5 rounded-xl font-bold text-white shadow-lg transition ${confirmClass}`;
             
-            if (c) {
-                confirmBtn.onclick = c;
-                document.getElementById('modal-cancel-btn').classList.remove('hidden');
+            if (callback) {
+                cBtn.onclick = callback;
+                if (showCancel) document.getElementById('modal-cancel-btn').classList.remove('hidden');
+                else document.getElementById('modal-cancel-btn').classList.add('hidden');
+                cBtn.textContent = "Confirmar";
             } else {
-                confirmBtn.onclick = closeModal;
-                confirmBtn.textContent = "OK";
+                cBtn.onclick = closeModal;
+                cBtn.textContent = "OK";
                 document.getElementById('modal-cancel-btn').classList.add('hidden');
             }
         };
 
-        window.closeModal = () => {
-            document.getElementById('custom-modal').classList.add('hidden');
-            document.getElementById('modal-confirm-btn').textContent = "Confirmar";
-        };
-
+        window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
         window.formatarInputHora = (i) => {
             let v = i.value.replace(/\D/g, '');
             if (v.length > 2) v = v.substring(0, 2) + ':' + v.substring(2, 4);
             i.value = v;
         };
-
         window.toggleDarkMode = () => document.documentElement.classList.toggle('dark');
-        
         window.onload = () => {
             document.getElementById('in-data').value = new Date().toISOString().split('T')[0];
         };
