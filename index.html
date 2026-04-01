@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-PT" class="light" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PontoApp - Gestão de Jornada</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body { transition: background-color 0.3s, color 0.3s; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Modal Animation */
+        .modal-enter { opacity: 0; transform: scale(0.95); }
+        .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.2s ease-out; }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: #ffffff;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 min-h-screen font-sans pb-16">
+
+    <!-- Modal de Confirmação -->
+    <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-200 dark:border-slate-700 transform transition-all">
+            <h3 id="modal-title" class="text-xl font-bold text-slate-900 dark:text-white mb-2">Confirmar Ação</h3>
+            <p id="modal-message" class="text-slate-500 dark:text-slate-400 text-sm mb-6">Deseja realmente prosseguir?</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal()" class="flex-1 py-2.5 rounded-xl font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition">Cancelar</button>
+                <button id="modal-confirm-btn" class="flex-1 py-2.5 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/20 transition">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cabeçalho -->
+    <header class="max-w-6xl mx-auto px-4 pt-8 pb-10 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-600 p-3 rounded-2xl shadow-xl shadow-blue-500/30">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">PontoApp</h1>
+                <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-[0.2em]">Gestão de Banco de Horas</p>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 px-10 py-4 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 text-center min-w-[220px]">
+            <div id="txt-hora" class="text-3xl font-black text-slate-800 dark:text-white tabular-nums tracking-tighter">00:00:00</div>
+            <div id="txt-data" class="text-[10px] uppercase tracking-[0.15em] font-bold text-slate-400 dark:text-slate-500 mt-0.5">A carregar...</div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="toggleDarkMode()" class="p-3.5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 group">
+                <svg id="icon-moon" class="w-6 h-6 text-slate-600 block dark:hidden group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <svg id="icon-sun" class="w-6 h-6 text-yellow-400 hidden dark:block group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Coluna Input -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="bg-blue-600 p-6 text-white">
+                    <h2 class="text-lg font-bold">Bater Ponto</h2>
+                    <p class="text-xs opacity-80 font-medium">Cálculos automáticos em tempo real</p>
+                </div>
+                
+                <div class="p-6 space-y-5">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">Funcionário</label>
+                            <input type="text" id="in-nome" placeholder="Nome do funcionário" class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition text-slate-700 dark:text-slate-200 font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">Data</label>
+                            <input type="date" id="in-data" class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold text-slate-700 dark:text-slate-200">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 text-center">Entrada</label>
+                                <input type="text" id="in-entrada" placeholder="08:00" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-slate-700 dark:text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 text-center">Almoço (Saída)</label>
+                                <input type="text" id="in-ida-almoco" placeholder="12:00" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-slate-700 dark:text-slate-200">
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 text-center">Saída Final</label>
+                                <input type="text" id="in-saida" placeholder="17:30" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-slate-700 dark:text-slate-200">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 text-center">Almoço (Retorno)</label>
+                                <input type="text" id="in-volta-almoco" placeholder="13:00" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-slate-700 dark:text-slate-200">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="salvarRegistro()" id="btn-salvar" class="w-full py-4 rounded-2xl font-black text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-600/30 flex justify-center items-center gap-2 transform active:scale-[0.98]">
+                        <span id="btn-text">REGISTRAR PONTO</span>
+                        <div id="btn-spinner" class="spinner hidden"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Dash e Tabela -->
+        <div class="lg:col-span-8 space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Dias Ativos</p>
+                    <p id="dash-dias" class="text-4xl font-black text-slate-800 dark:text-white">0</p>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Horas</p>
+                    <p id="dash-trabalhado" class="text-4xl font-black text-blue-600 dark:text-blue-400">00:00h</p>
+                </div>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Saldo Geral</p>
+                    <p id="dash-saldo" class="text-4xl font-black text-slate-400">00:00h</p>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[400px]">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h3 class="font-black text-slate-800 dark:text-white flex items-center gap-3">
+                        <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
+                        Histórico Digital
+                    </h3>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <input type="text" id="in-filtro" oninput="filtrarBanco()" placeholder="Pesquisar..." class="w-full py-2.5 pl-4 pr-4 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 dark:text-slate-200">
+                        <button onclick="confirmarLimpeza()" class="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left" id="tabela-registros">
+                        <thead class="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <tr>
+                                <th class="px-6 py-4">Funcionário / Data</th>
+                                <th class="px-6 py-4 text-center">Horários</th>
+                                <th class="px-6 py-4 text-center">Trabalhado</th>
+                                <th class="px-6 py-4 text-center">Saldo</th>
+                                <th class="px-6 py-4 text-center"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela" class="divide-y divide-slate-100 dark:divide-slate-700/50"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Firebase SDK Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, addDoc, deleteDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+
+        // Configurações do Firebase fornecidas pelo usuário
+        const userFirebaseConfig = {
+            apiKey: "AIzaSyACzHAv5xKUkNRSfcnAwSQxg1CTRnm8emU",
+            authDomain: "deimos-1fdc4.firebaseapp.com",
+            projectId: "deimos-1fdc4",
+            storageBucket: "deimos-1fdc4.firebasestorage.app",
+            messagingSenderId: "716958071081",
+            appId: "1:716958071081:web:c6fb72e28f996f50c05f38",
+            measurementId: "G-C1RSXEK0JG"
+        };
+
+        // Prioriza as variáveis de ambiente, senão usa as chaves fornecidas
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : userFirebaseConfig;
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ponto-app-v1';
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+        
+        const META_DIARIA_MINUTOS = 510; // 8h30m
+        let bancoDeDados = [];
+        let userId = null;
+
+        // REGRA 3: Auth ANTES de queries
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Erro na autenticação:", err);
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                userId = user.uid;
+                ouvirBanco();
+            } else {
+                initAuth();
+            }
+        });
+
+        // REGRA 1: Caminho Estrito / REGRA 2: Filtro manual no JS
+        const ouvirBanco = () => {
+            if (!userId) return;
+            // Estrutura de pasta obrigatória: /artifacts/{appId}/users/{userId}/{collectionName}
+            const coll = collection(db, 'artifacts', appId, 'users', userId, 'registros');
+            
+            onSnapshot(coll, (snap) => {
+                bancoDeDados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                // REGRA 2: Ordenação manual no lado do cliente
+                bancoDeDados.sort((a, b) => new Date(b.data) - new Date(a.data));
+                filtrarBanco();
+            }, (err) => {
+                console.error("Erro ao ler dados do Firestore:", err);
+            });
+        };
+
+        window.salvarRegistro = async () => {
+            if (!userId) return;
+            
+            const btn = document.getElementById('btn-salvar');
+            const btnText = document.getElementById('btn-text');
+            const btnSpinner = document.getElementById('btn-spinner');
+            
+            const nome = document.getElementById('in-nome').value.trim();
+            const data = document.getElementById('in-data').value;
+            const ent = document.getElementById('in-entrada').value;
+            const al1 = document.getElementById('in-ida-almoco').value;
+            const al2 = document.getElementById('in-volta-almoco').value;
+            const sai = document.getElementById('in-saida').value;
+
+            if (!nome || !data || !ent || !sai) return;
+
+            // UI Feedback
+            btn.disabled = true;
+            btnText.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+
+            const mEnt = convMin(ent);
+            const mSai = convMin(sai);
+            let total = mSai >= mEnt ? (mSai - mEnt) : (1440 - mEnt + mSai);
+            
+            if (al1 && al2) {
+                const mAl1 = convMin(al1);
+                const mAl2 = convMin(al2);
+                total -= (mAl2 >= mAl1 ? (mAl2 - mAl1) : (1440 - mAl1 + mAl2));
+            }
+
+            const payload = {
+                nome, 
+                data, 
+                entrada: ent, 
+                idaAlmoco: al1 || "", 
+                voltaAlmoco: al2 || "", 
+                saida: sai,
+                totalTrabalhado: total,
+                saldo: total - META_DIARIA_MINUTOS,
+                ts: Date.now()
+            };
+
+            try {
+                await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'registros'), payload);
+                ['in-entrada','in-ida-almoco','in-volta-almoco','in-saida'].forEach(id => document.getElementById(id).value = '');
+            } catch (err) {
+                console.error("Erro ao salvar:", err);
+            } finally {
+                btn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+            }
+        };
+
+        window.excluirRegistro = (id) => {
+            showModal("Eliminar Ponto", "Confirmar exclusão definitiva?", async () => {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', id));
+                    closeModal();
+                } catch (err) { console.error(err); }
+            });
+        };
+
+        window.confirmarLimpeza = () => {
+            showModal("Limpar Banco", "Apagar TODOS os seus registros permanentemente?", async () => {
+                try {
+                    const coll = collection(db, 'artifacts', appId, 'users', userId, 'registros');
+                    const snap = await getDocs(coll);
+                    const batchDeletes = snap.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', d.id)));
+                    await Promise.all(batchDeletes);
+                    closeModal();
+                } catch (err) { console.error(err); }
+            });
+        };
+
+        // Helpers
+        const convMin = (s) => s ? s.split(':').reduce((h, m) => h * 60 + +m) : 0;
+        const convHora = (min) => {
+            const abs = Math.abs(min);
+            const h = Math.floor(abs/60).toString().padStart(2,'0');
+            const m = (abs%60).toString().padStart(2,'0');
+            return `${h}:${m}`;
+        };
+        const fmtData = (d) => d ? d.split('-').reverse().join('/') : "";
+
+        window.filtrarBanco = () => {
+            const termo = document.getElementById('in-filtro').value.toLowerCase();
+            const dados = bancoDeDados.filter(r => 
+                (r.nome && r.nome.toLowerCase().includes(termo)) || 
+                (r.data && fmtData(r.data).includes(termo))
+            );
+            render(dados);
+        };
+
+        const render = (dados) => {
+            const corpo = document.getElementById('corpo-tabela');
+            corpo.innerHTML = '';
+            let tMin = 0, tSaldo = 0;
+
+            dados.forEach(reg => {
+                tMin += reg.totalTrabalhado || 0; 
+                tSaldo += reg.saldo || 0;
+                const saldoVal = reg.saldo || 0;
+                const cor = saldoVal > 0 ? 'text-green-500' : (saldoVal < 0 ? 'text-red-500' : 'text-slate-400');
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 transition";
+                tr.innerHTML = `
+                    <td class="px-6 py-5">
+                        <div class="font-bold text-slate-800 dark:text-white leading-tight">${reg.nome || '---'}</div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase mt-1">${fmtData(reg.data)}</div>
+                    </td>
+                    <td class="px-6 py-5 text-center">
+                        <div class="text-xs font-bold bg-slate-100 dark:bg-slate-700/50 px-3 py-1 rounded-full inline-block text-slate-600 dark:text-slate-300">
+                            ${reg.entrada || '--:--'} — ${reg.saida || '--:--'}
+                        </div>
+                    </td>
+                    <td class="px-6 py-5 text-center font-bold text-slate-700 dark:text-slate-200">${convHora(reg.totalTrabalhado || 0)}h</td>
+                    <td class="px-6 py-5 text-center font-black ${cor}">${saldoVal >= 0 ? '+' : '-'}${convHora(saldoVal)}h</td>
+                    <td class="px-6 py-5 text-center">
+                        <button onclick="excluirRegistro('${reg.id}')" class="text-slate-300 hover:text-red-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </td>
+                `;
+                corpo.appendChild(tr);
+            });
+
+            document.getElementById('dash-dias').textContent = dados.length;
+            document.getElementById('dash-trabalhado').textContent = convHora(tMin) + 'h';
+            const ds = document.getElementById('dash-saldo');
+            ds.textContent = (tSaldo >= 0 ? '+' : '-') + convHora(tSaldo) + 'h';
+            ds.className = `text-4xl font-black ${tSaldo > 0 ? 'text-green-500' : (tSaldo < 0 ? 'text-red-500' : 'text-slate-400')}`;
+        };
+
+        // Interface Clock & Date
+        setInterval(() => {
+            const a = new Date();
+            document.getElementById('txt-hora').textContent = a.toLocaleTimeString('pt-PT');
+            document.getElementById('txt-data').textContent = a.toLocaleDateString('pt-PT', { weekday: 'long', day: '2-digit', month: 'short' });
+        }, 1000);
+
+        // UI Management
+        const showModal = (t, m, c) => {
+            document.getElementById('modal-title').textContent = t;
+            document.getElementById('modal-message').textContent = m;
+            document.getElementById('custom-modal').classList.remove('hidden');
+            document.getElementById('modal-confirm-btn').onclick = c;
+        };
+        window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
+        window.formatarInputHora = (i) => {
+            let v = i.value.replace(/\D/g, '');
+            if (v.length > 2) v = v.substring(0, 2) + ':' + v.substring(2, 4);
+            i.value = v;
+        };
+        window.toggleDarkMode = () => document.documentElement.classList.toggle('dark');
+        
+        // Init
+        window.onload = () => {
+            document.getElementById('in-data').value = new Date().toISOString().split('T')[0];
+        };
+    </script>
+</body>
+</html>
