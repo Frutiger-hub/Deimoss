@@ -165,10 +165,10 @@
             <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
                     <h3 class="font-black flex items-center gap-2">
-                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        <span id="live-indicator" class="w-2 h-2 bg-slate-300 rounded-full"></span>
                         Live Firestore Data
                     </h3>
-                    <input type="text" id="in-filtro" oninput="filtrarBanco()" placeholder="Filtrar..." class="px-4 py-2 text-sm bg-slate-50 dark:bg-slate-900 border rounded-xl outline-none">
+                    <input type="text" id="in-filtro" oninput="filtrarBanco()" placeholder="Filtrar por nome ou data..." class="px-4 py-2 text-sm bg-slate-50 dark:bg-slate-900 border rounded-xl outline-none w-48 md:w-64">
                 </div>
 
                 <div class="overflow-x-auto">
@@ -182,7 +182,17 @@
                                 <th class="px-6 py-4"></th>
                             </tr>
                         </thead>
-                        <tbody id="corpo-tabela" class="divide-y divide-slate-100 dark:divide-slate-700/50"></tbody>
+                        <tbody id="corpo-tabela" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                            <!-- Estado inicial: Carregando -->
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <div class="spinner !border-slate-300 !border-l-blue-600"></div>
+                                        A carregar registos da nuvem...
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -213,6 +223,7 @@
         let bancoDeDados = [];
         let userId = null;
         let registroEmEdicao = null;
+        let estaCarregando = true;
 
         onAuthStateChanged(auth, (user) => {
             const btn = document.getElementById('btn-salvar');
@@ -237,20 +248,36 @@
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (err) { console.error("Erro Auth:", err); }
+            } catch (err) { 
+                console.error("Erro Auth:", err);
+                estaCarregando = false;
+                render([]);
+            }
         }
 
         function ouvirBanco() {
             const coll = collection(db, 'artifacts', appId, 'users', userId, 'registros');
-            // REGRA: onSnapshot garante tempo real e reflete mudanças no servidor
-            onSnapshot(coll, (snap) => {
+            const liveIndicator = document.getElementById('live-indicator');
+            
+            // Ativamos metadata changes para ver d.metadata.hasPendingWrites
+            onSnapshot(coll, { includeMetadataChanges: true }, (snap) => {
+                estaCarregando = false;
+                liveIndicator.classList.replace('bg-slate-300', 'bg-green-500');
+                liveIndicator.classList.add('animate-pulse');
+
                 bancoDeDados = snap.docs.map(d => ({ 
                     id: d.id, 
                     ...d.data(),
-                    isLocal: d.metadata.hasPendingWrites // TRUE se ainda não chegou ao servidor
+                    isLocal: d.metadata.hasPendingWrites
                 }));
+
+                // Ordenação por data (mais recente primeiro)
                 bancoDeDados.sort((a, b) => new Date(b.data) - new Date(a.data));
                 filtrarBanco();
+            }, (err) => {
+                console.error("Erro Firestore:", err);
+                estaCarregando = false;
+                render([]);
             });
         }
 
@@ -289,12 +316,11 @@
             };
 
             try {
-                const collPath = collection(db, 'artifacts', appId, 'users', userId, 'registros');
                 if (registroEmEdicao) {
                     await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', registroEmEdicao), payload);
                     cancelarEdicao();
                 } else {
-                    await addDoc(collPath, payload);
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'registros'), payload);
                     limpar();
                 }
             } catch (err) { console.error("Erro ao salvar:", err); }
@@ -322,7 +348,7 @@
         };
 
         window.excluirRegistro = async (id) => {
-            if (confirm("Apagar registo na nuvem?")) {
+            if (confirm("Apagar registo definitivamente da nuvem?")) {
                 await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', id));
             }
         };
@@ -345,14 +371,24 @@
         window.filtrarBanco = () => {
             const termo = document.getElementById('in-filtro').value.toLowerCase();
             const dados = bancoDeDados.filter(r => r.nome.toLowerCase().includes(termo) || r.data.includes(termo));
-            render(dados);
+            render(estaCarregando ? null : dados);
         };
 
         const render = (dados) => {
             const corpo = document.getElementById('corpo-tabela');
             corpo.innerHTML = '';
-            let tMin = 0, tSaldo = 0;
+            
+            if (estaCarregando) {
+                corpo.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium"><div class="flex items-center justify-center gap-2"><div class="spinner !border-slate-300 !border-l-blue-600"></div>A carregar registos...</div></td></tr>`;
+                return;
+            }
 
+            if (!dados || dados.length === 0) {
+                corpo.innerHTML = `<tr><td colspan="5" class="px-6 py-12 text-center text-slate-400 font-medium">Nenhum registo encontrado na nuvem.</td></tr>`;
+                return;
+            }
+
+            let tMin = 0, tSaldo = 0;
             dados.forEach(reg => {
                 tMin += reg.totalTrabalhado; tSaldo += reg.saldo;
                 const tr = document.createElement('tr');
@@ -361,7 +397,7 @@
                     <td class="px-6 py-5">
                         <div class="flex items-center gap-2">
                             <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${reg.isLocal ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}">
-                                ${reg.isLocal ? 'Syncing' : 'Cloud'}
+                                ${reg.isLocal ? 'A sincronizar' : 'Cloud'}
                             </span>
                             <div class="font-bold">${reg.nome}</div>
                         </div>
@@ -402,7 +438,9 @@
         };
         window.toggleDarkMode = () => document.documentElement.classList.toggle('dark');
         window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
-        window.onload = () => document.getElementById('in-data').value = new Date().toISOString().split('T')[0];
+        window.onload = () => {
+            document.getElementById('in-data').value = new Date().toISOString().split('T')[0];
+        };
     </script>
 </body>
 </html>
