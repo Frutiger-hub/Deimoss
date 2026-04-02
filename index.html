@@ -24,15 +24,13 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Modal Animation */
         .modal-enter { opacity: 0; transform: scale(0.95); }
         .modal-enter-active { opacity: 1; transform: scale(1); transition: all 0.2s ease-out; }
 
-        /* Loading Spinner */
         .spinner {
             border: 3px solid rgba(0, 0, 0, 0.1);
-            width: 24px;
-            height: 24px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
             border-left-color: #ffffff;
             animation: spin 1s linear infinite;
@@ -45,7 +43,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 min-h-screen font-sans pb-16">
 
-    <!-- Modal de Confirmação / Alerta -->
+    <!-- Modal de Alerta -->
     <div id="custom-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-200 dark:border-slate-700 transform transition-all">
             <h3 id="modal-title" class="text-xl font-bold text-slate-900 dark:text-white mb-2">Aviso</h3>
@@ -64,8 +62,13 @@
                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
             <div>
-                <h1 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">PontoApp</h1>
-                <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-[0.2em]">Gestão de Banco de Horas</p>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">PontoApp</h1>
+                    <div id="status-cloud" class="p-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-400" title="Desconectado">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.5 19c-3.037 0-5.5-2.463-5.5-5.5 0-3.037 2.463-5.5 5.5-5.5s5.5 2.463 5.5 5.5c0 3.037-2.463 5.5-5.5 5.5zm-11.5-2c-2.485 0-4.5-2.015-4.5-4.5s2.015-4.5 4.5-4.5c.348 0 .684.04 1.008.115 1.066-2.474 3.518-4.115 6.492-4.115 3.197 0 5.86 1.905 6.848 4.625 1.631.644 2.801 2.215 2.801 4.07 0 2.411-1.959 4.364-4.375 4.364h-.275c-.244 3.08-2.836 5.441-5.991 5.441-3.155 0-5.747-2.361-5.991-5.441h-1.009z"/></svg>
+                    </div>
+                </div>
+                <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 mt-1 uppercase tracking-[0.2em]">Sincronização em Tempo Real</p>
             </div>
         </div>
 
@@ -76,114 +79,107 @@
 
         <div class="flex items-center gap-3">
             <button onclick="toggleDarkMode()" class="p-3.5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95 group">
-                <svg id="icon-moon" class="w-6 h-6 text-slate-600 block dark:hidden group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                <svg id="icon-sun" class="w-6 h-6 text-yellow-400 hidden dark:block group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg class="w-6 h-6 text-slate-600 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <svg class="w-6 h-6 text-yellow-400 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             </button>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- Coluna Input -->
+        <!-- Formulário -->
         <div class="lg:col-span-4 space-y-6">
             <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <div id="form-header" class="bg-blue-600 p-6 text-white transition-colors">
+                <div id="form-header" class="bg-blue-600 p-6 text-white">
                     <h2 id="form-title" class="text-lg font-bold">Bater Ponto</h2>
-                    <p class="text-xs opacity-80 font-medium">Cálculos automáticos em tempo real</p>
+                    <p class="text-xs opacity-80 font-medium">Persistência direta no Firestore</p>
                 </div>
                 
                 <div class="p-6 space-y-5">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">Funcionário</label>
-                            <input type="text" id="in-nome" placeholder="Nome do funcionário" class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition text-slate-700 dark:text-slate-200 font-semibold">
+                            <input type="text" id="in-nome" class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition font-semibold">
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">Data</label>
-                            <input type="date" id="in-data" class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition font-semibold text-slate-700 dark:text-slate-200">
+                            <input type="date" id="in-data" class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition font-semibold">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 text-center">Entrada</label>
-                                <input type="text" id="in-entrada" placeholder="08:00" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-slate-700 dark:text-slate-200">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase block text-center mb-1">Entrada</label>
+                                <input type="text" id="in-entrada" placeholder="08:00" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-bold">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 text-center">Almoço (Saída)</label>
-                                <input type="text" id="in-ida-almoco" placeholder="12:00" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-slate-700 dark:text-slate-200">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase block text-center mb-1">Almoço (S)</label>
+                                <input type="text" id="in-ida-almoco" placeholder="12:00" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-bold">
                             </div>
                         </div>
                         <div class="space-y-4">
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 text-center">Saída Final</label>
-                                <input type="text" id="in-saida" placeholder="17:30" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-slate-700 dark:text-slate-200">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase block text-center mb-1">Saída Final</label>
+                                <input type="text" id="in-saida" placeholder="17:30" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-bold">
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 text-center">Almoço (Retorno)</label>
-                                <input type="text" id="in-volta-almoco" placeholder="13:00" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-center font-bold text-slate-700 dark:text-slate-200">
+                                <label class="text-[10px] font-bold text-slate-400 uppercase block text-center mb-1">Almoço (R)</label>
+                                <input type="text" id="in-volta-almoco" placeholder="13:00" maxlength="5" oninput="formatarInputHora(this)" class="w-full p-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-center font-bold">
                             </div>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1.5 ml-1">Observações</label>
-                        <textarea id="in-obs" rows="2" placeholder="Notas adicionais sobre o dia..." class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition text-slate-700 dark:text-slate-200 font-medium text-sm"></textarea>
+                        <textarea id="in-obs" rows="2" class="w-full p-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition text-sm"></textarea>
                     </div>
 
-                    <div class="flex flex-col gap-3">
-                        <button onclick="salvarRegistro()" id="btn-salvar" disabled class="w-full py-4 rounded-2xl font-black text-white bg-slate-400 cursor-not-allowed transition shadow-lg flex justify-center items-center gap-2 transform active:scale-[0.98]">
-                            <span id="btn-text">A CONECTAR...</span>
+                    <div class="space-y-3">
+                        <button onclick="salvarRegistro()" id="btn-salvar" disabled class="w-full py-4 rounded-2xl font-black text-white bg-slate-400 flex justify-center items-center gap-2">
+                            <span id="btn-text">CONECTANDO...</span>
                             <div id="btn-spinner" class="spinner hidden"></div>
                         </button>
-                        <button id="btn-cancelar-edicao" onclick="cancelarEdicao()" class="w-full py-3 rounded-2xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 transition hidden">
-                            CANCELAR EDIÇÃO
-                        </button>
+                        <button id="btn-cancelar-edicao" onclick="cancelarEdicao()" class="w-full py-3 rounded-2xl font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 hidden">CANCELAR</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Coluna Dash e Tabela -->
+        <!-- Dashboard e Tabela -->
         <div class="lg:col-span-8 space-y-6">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Dias Ativos</p>
-                    <p id="dash-dias" class="text-4xl font-black text-slate-800 dark:text-white">0</p>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Registos Cloud</p>
+                    <p id="dash-dias" class="text-4xl font-black">0</p>
                 </div>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total Horas</p>
-                    <p id="dash-trabalhado" class="text-4xl font-black text-blue-600 dark:text-blue-400">00:00h</p>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Total Horas</p>
+                    <p id="dash-trabalhado" class="text-4xl font-black text-blue-600">00:00h</p>
                 </div>
-                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Saldo Geral</p>
-                    <p id="dash-saldo" class="text-4xl font-black text-slate-400">00:00h</p>
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700">
+                    <p class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Saldo Geral</p>
+                    <p id="dash-saldo" class="text-4xl font-black text-slate-300">00:00h</p>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-700 min-h-[400px]">
-                <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <h3 class="font-black text-slate-800 dark:text-white flex items-center gap-3">
-                        <span class="w-1.5 h-6 bg-blue-600 rounded-full"></span>
-                        Histórico Digital
+            <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+                    <h3 class="font-black flex items-center gap-2">
+                        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        Live Firestore Data
                     </h3>
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <input type="text" id="in-filtro" oninput="filtrarBanco()" placeholder="Pesquisar..." class="w-full py-2.5 pl-4 pr-4 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 dark:text-slate-200">
-                        <button onclick="confirmarLimpeza()" class="p-2.5 text-red-500 hover:bg-red-50 rounded-xl transition" title="Limpar tudo">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>
+                    <input type="text" id="in-filtro" oninput="filtrarBanco()" placeholder="Filtrar..." class="px-4 py-2 text-sm bg-slate-50 dark:bg-slate-900 border rounded-xl outline-none">
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left" id="tabela-registros">
+                    <table class="w-full text-left">
                         <thead class="bg-slate-50 dark:bg-slate-900/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             <tr>
-                                <th class="px-6 py-4">Funcionário / Data</th>
+                                <th class="px-6 py-4">Status / Utilizador</th>
                                 <th class="px-6 py-4 text-center">Horários</th>
                                 <th class="px-6 py-4 text-center">Trabalhado</th>
                                 <th class="px-6 py-4 text-center">Saldo</th>
-                                <th class="px-6 py-4 text-center"></th>
+                                <th class="px-6 py-4"></th>
                             </tr>
                         </thead>
                         <tbody id="corpo-tabela" class="divide-y divide-slate-100 dark:divide-slate-700/50"></tbody>
@@ -193,135 +189,116 @@
         </div>
     </main>
 
-    <!-- Firebase SDK Integration -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
 
-        // Chaves fornecidas
         const userFirebaseConfig = {
             apiKey: "AIzaSyACzHAv5xKUkNRSfcnAwSQxg1CTRnm8emU",
             authDomain: "deimos-1fdc4.firebaseapp.com",
             projectId: "deimos-1fdc4",
             storageBucket: "deimos-1fdc4.firebasestorage.app",
             messagingSenderId: "716958071081",
-            appId: "1:716958071081:web:c6fb72e28f996f50c05f38",
-            measurementId: "G-C1RSXEK0JG"
+            appId: "1:716958071081:web:c6fb72e28f996f50c05f38"
         };
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : userFirebaseConfig;
-        
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : userFirebaseConfig;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ponto-app-v1';
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         
-        try { getAnalytics(app); } catch (e) {}
-        
-        const META_DIARIA_MINUTOS = 510; // 8h30m
         let bancoDeDados = [];
         let userId = null;
-        let registroEmEdicao = null; // Armazena o ID do registro sendo editado
+        let registroEmEdicao = null;
 
-        const initAuth = async () => {
+        onAuthStateChanged(auth, (user) => {
+            const btn = document.getElementById('btn-salvar');
+            const cloudIcon = document.getElementById('status-cloud');
+            if (user) {
+                userId = user.uid;
+                cloudIcon.classList.replace('text-slate-400', 'text-green-500');
+                cloudIcon.title = "Sincronizado com Nuvem";
+                ouvirBanco();
+                btn.disabled = false;
+                btn.className = "w-full py-4 rounded-2xl font-black text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg flex justify-center items-center gap-2";
+                document.getElementById('btn-text').textContent = "REGISTRAR PONTO";
+            } else {
+                autenticar();
+            }
+        });
+
+        async function autenticar() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (err) {
-                console.error("Erro Firebase Auth:", err);
-                showModal("Erro de Conexão", "Não foi possível ligar ao Firebase. Detalhes: " + err.code);
-            }
-        };
+            } catch (err) { console.error("Erro Auth:", err); }
+        }
 
-        onAuthStateChanged(auth, (user) => {
-            const btn = document.getElementById('btn-salvar');
-            const btnText = document.getElementById('btn-text');
-            if (user) {
-                userId = user.uid;
-                ouvirBanco();
-                btn.disabled = false;
-                btn.className = "w-full py-4 rounded-2xl font-black text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg shadow-blue-600/30 flex justify-center items-center gap-2 transform active:scale-[0.98]";
-                btnText.textContent = "REGISTRAR PONTO";
-            } else {
-                initAuth();
-            }
-        });
-
-        const ouvirBanco = () => {
-            if (!userId) return;
+        function ouvirBanco() {
             const coll = collection(db, 'artifacts', appId, 'users', userId, 'registros');
-            
+            // REGRA: onSnapshot garante tempo real e reflete mudanças no servidor
             onSnapshot(coll, (snap) => {
-                bancoDeDados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                bancoDeDados = snap.docs.map(d => ({ 
+                    id: d.id, 
+                    ...d.data(),
+                    isLocal: d.metadata.hasPendingWrites // TRUE se ainda não chegou ao servidor
+                }));
                 bancoDeDados.sort((a, b) => new Date(b.data) - new Date(a.data));
                 filtrarBanco();
-            }, (err) => {
-                console.error("Erro Firestore:", err);
             });
-        };
+        }
 
         window.salvarRegistro = async () => {
             if (!userId) return;
-            
             const btn = document.getElementById('btn-salvar');
-            const btnText = document.getElementById('btn-text');
             const btnSpinner = document.getElementById('btn-spinner');
+            const btnText = document.getElementById('btn-text');
             
-            const nome = document.getElementById('in-nome').value.trim();
-            const data = document.getElementById('in-data').value;
-            const ent = document.getElementById('in-entrada').value;
-            const al1 = document.getElementById('in-ida-almoco').value;
-            const al2 = document.getElementById('in-volta-almoco').value;
-            const sai = document.getElementById('in-saida').value;
-            const obs = document.getElementById('in-obs').value.trim();
+            const campos = {
+                nome: document.getElementById('in-nome').value.trim(),
+                data: document.getElementById('in-data').value,
+                ent: document.getElementById('in-entrada').value,
+                al1: document.getElementById('in-ida-almoco').value,
+                al2: document.getElementById('in-volta-almoco').value,
+                sai: document.getElementById('in-saida').value,
+                obs: document.getElementById('in-obs').value.trim()
+            };
 
-            if (!nome || !data || !ent || !sai) {
-                showModal("Aviso", "Preenche os campos obrigatórios (Nome, Data, Entrada e Saída).");
-                return;
-            }
+            if (!campos.nome || !campos.data || !campos.ent || !campos.sai) return;
 
             btn.disabled = true;
             btnText.classList.add('hidden');
             btnSpinner.classList.remove('hidden');
 
-            const mEnt = convMin(ent);
-            const mSai = convMin(sai);
+            const mEnt = convMin(campos.ent);
+            const mSai = convMin(campos.sai);
             let total = mSai >= mEnt ? (mSai - mEnt) : (1440 - mEnt + mSai);
-            
-            if (al1 && al2) {
-                const mAl1 = convMin(al1);
-                const mAl2 = convMin(al2);
-                total -= (mAl2 >= mAl1 ? (mAl2 - mAl1) : (1440 - mAl1 + mAl2));
-            }
+            if (campos.al1 && campos.al2) total -= (convMin(campos.al2) - convMin(campos.al1));
 
             const payload = {
-                nome, data, entrada: ent, idaAlmoco: al1 || "", voltaAlmoco: al2 || "", saida: sai,
-                obs: obs,
-                totalTrabalhado: total,
-                saldo: total - META_DIARIA_MINUTOS,
-                ts: Date.now()
+                ...campos, 
+                totalTrabalhado: total, 
+                saldo: total - 510, 
+                ts: Date.now() 
             };
 
             try {
+                const collPath = collection(db, 'artifacts', appId, 'users', userId, 'registros');
                 if (registroEmEdicao) {
-                    const docRef = doc(db, 'artifacts', appId, 'users', userId, 'registros', registroEmEdicao);
-                    await updateDoc(docRef, payload);
-                    cancelarEdicao(); // Reseta o formulário
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', registroEmEdicao), payload);
+                    cancelarEdicao();
                 } else {
-                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'registros'), payload);
-                    limparCampos();
+                    await addDoc(collPath, payload);
+                    limpar();
                 }
-            } catch (err) {
-                showModal("Erro", `Falha ao salvar: ${err.code}`);
-            } finally {
+            } catch (err) { console.error("Erro ao salvar:", err); }
+            finally {
                 btn.disabled = false;
                 btnText.classList.remove('hidden');
                 btnSpinner.classList.add('hidden');
@@ -330,80 +307,44 @@
 
         window.editarRegistro = (id) => {
             const reg = bancoDeDados.find(r => r.id === id);
-            if (!reg) return;
-
             registroEmEdicao = id;
-            
-            // Preenche o formulário
-            document.getElementById('in-nome').value = reg.nome || "";
-            document.getElementById('in-data').value = reg.data || "";
-            document.getElementById('in-entrada').value = reg.entrada || "";
-            document.getElementById('in-ida-almoco').value = reg.idaAlmoco || "";
-            document.getElementById('in-volta-almoco').value = reg.voltaAlmoco || "";
-            document.getElementById('in-saida').value = reg.saida || "";
+            document.getElementById('in-nome').value = reg.nome;
+            document.getElementById('in-data').value = reg.data;
+            document.getElementById('in-entrada').value = reg.ent;
+            document.getElementById('in-ida-almoco').value = reg.al1;
+            document.getElementById('in-volta-almoco').value = reg.al2;
+            document.getElementById('in-saida').value = reg.sai;
             document.getElementById('in-obs').value = reg.obs || "";
-
-            // UI Alterações
-            document.getElementById('btn-text').textContent = "ATUALIZAR PONTO";
             document.getElementById('form-header').classList.replace('bg-blue-600', 'bg-amber-500');
-            document.getElementById('form-title').textContent = "Editar Registro";
+            document.getElementById('btn-text').textContent = "ATUALIZAR";
             document.getElementById('btn-cancelar-edicao').classList.remove('hidden');
-
-            // Scroll para o topo para facilitar a edição
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.excluirRegistro = async (id) => {
+            if (confirm("Apagar registo na nuvem?")) {
+                await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', id));
+            }
         };
 
         window.cancelarEdicao = () => {
             registroEmEdicao = null;
-            limparCampos();
-            document.getElementById('btn-text').textContent = "REGISTRAR PONTO";
+            limpar();
             document.getElementById('form-header').classList.replace('bg-amber-500', 'bg-blue-600');
-            document.getElementById('form-title').textContent = "Bater Ponto";
+            document.getElementById('btn-text').textContent = "REGISTRAR PONTO";
             document.getElementById('btn-cancelar-edicao').classList.add('hidden');
         };
 
-        const limparCampos = () => {
-            ['in-entrada','in-ida-almoco','in-volta-almoco','in-saida', 'in-obs'].forEach(id => document.getElementById(id).value = '');
-        };
-
-        window.excluirRegistro = (id) => {
-            showModal("Eliminar Registo", "Desejas apagar este ponto definitivamente?", async () => {
-                try {
-                    await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', id));
-                    closeModal();
-                } catch (err) { console.error(err); }
-            }, true);
-        };
-
-        window.confirmarLimpeza = () => {
-            showModal("Limpar Tudo", "Desejas apagar TODOS os teus registos?", async () => {
-                try {
-                    const coll = collection(db, 'artifacts', appId, 'users', userId, 'registros');
-                    const snap = await getDocs(coll);
-                    const batch = snap.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'registros', d.id)));
-                    await Promise.all(batch);
-                    closeModal();
-                } catch (err) { console.error(err); }
-            }, true, "bg-red-500 hover:bg-red-600");
-        };
-
-        // Helpers
-        const convMin = (s) => s ? s.split(':').reduce((h, m) => h * 60 + +m) : 0;
+        const limpar = () => ['in-entrada','in-ida-almoco','in-volta-almoco','in-saida','in-obs'].forEach(id => document.getElementById(id).value = '');
+        const convMin = (s) => s.split(':').reduce((h, m) => h * 60 + +m);
         const convHora = (min) => {
             const abs = Math.abs(min);
-            const h = Math.floor(abs/60).toString().padStart(2,'0');
-            const m = (abs%60).toString().padStart(2,'0');
-            return `${h}:${m}`;
+            return `${Math.floor(abs/60).toString().padStart(2,'0')}:${(abs%60).toString().padStart(2,'0')}`;
         };
-        const fmtData = (d) => d ? d.split('-').reverse().join('/') : "";
 
         window.filtrarBanco = () => {
             const termo = document.getElementById('in-filtro').value.toLowerCase();
-            const dados = bancoDeDados.filter(r => 
-                (r.nome && r.nome.toLowerCase().includes(termo)) || 
-                (r.data && fmtData(r.data).includes(termo)) ||
-                (r.obs && r.obs.toLowerCase().includes(termo))
-            );
+            const dados = bancoDeDados.filter(r => r.nome.toLowerCase().includes(termo) || r.data.includes(termo));
             render(dados);
         };
 
@@ -413,34 +354,28 @@
             let tMin = 0, tSaldo = 0;
 
             dados.forEach(reg => {
-                tMin += reg.totalTrabalhado || 0; 
-                tSaldo += reg.saldo || 0;
-                const saldoVal = reg.saldo || 0;
-                const cor = saldoVal > 0 ? 'text-green-500' : (saldoVal < 0 ? 'text-red-500' : 'text-slate-400');
-                
+                tMin += reg.totalTrabalhado; tSaldo += reg.saldo;
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 transition group";
+                tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 group transition";
                 tr.innerHTML = `
                     <td class="px-6 py-5">
-                        <div class="font-bold text-slate-800 dark:text-white leading-tight">${reg.nome || '---'}</div>
-                        <div class="text-[10px] font-bold text-slate-400 uppercase mt-1">${fmtData(reg.data)}</div>
-                        ${reg.obs ? `<div class="text-[11px] text-slate-500 dark:text-slate-400 mt-2 italic border-l-2 border-slate-200 dark:border-slate-700 pl-2 max-w-[200px] truncate" title="${reg.obs}">${reg.obs}</div>` : ''}
-                    </td>
-                    <td class="px-6 py-5 text-center">
-                        <div class="text-xs font-bold bg-slate-100 dark:bg-slate-700/50 px-3 py-1 rounded-full inline-block text-slate-600 dark:text-slate-300">
-                            ${reg.entrada || '--:--'} — ${reg.saida || '--:--'}
+                        <div class="flex items-center gap-2">
+                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${reg.isLocal ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'}">
+                                ${reg.isLocal ? 'Syncing' : 'Cloud'}
+                            </span>
+                            <div class="font-bold">${reg.nome}</div>
                         </div>
+                        <div class="text-[10px] font-bold text-slate-400 mt-1">${reg.data.split('-').reverse().join('/')}</div>
                     </td>
-                    <td class="px-6 py-5 text-center font-bold text-slate-700 dark:text-slate-200">${convHora(reg.totalTrabalhado || 0)}h</td>
-                    <td class="px-6 py-5 text-center font-black ${cor}">${saldoVal >= 0 ? '+' : '-'}${convHora(saldoVal)}h</td>
-                    <td class="px-6 py-5 text-center">
-                        <div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="editarRegistro('${reg.id}')" class="text-slate-400 hover:text-blue-500 transition-colors p-1" title="Editar">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            </button>
-                            <button onclick="excluirRegistro('${reg.id}')" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Excluir">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
+                    <td class="px-6 py-5 text-center text-xs font-mono">${reg.ent} - ${reg.sai}</td>
+                    <td class="px-6 py-5 text-center font-bold">${convHora(reg.totalTrabalhado)}h</td>
+                    <td class="px-6 py-5 text-center font-black ${reg.saldo >= 0 ? 'text-green-500' : 'text-red-500'}">
+                        ${reg.saldo >= 0 ? '+' : '-'}${convHora(reg.saldo)}h
+                    </td>
+                    <td class="px-6 py-5">
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100">
+                            <button onclick="editarRegistro('${reg.id}')" class="p-1 hover:text-blue-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+                            <button onclick="excluirRegistro('${reg.id}')" class="p-1 hover:text-red-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                     </td>
                 `;
@@ -449,48 +384,25 @@
 
             document.getElementById('dash-dias').textContent = dados.length;
             document.getElementById('dash-trabalhado').textContent = convHora(tMin) + 'h';
-            const ds = document.getElementById('dash-saldo');
-            ds.textContent = (tSaldo >= 0 ? '+' : '-') + convHora(tSaldo) + 'h';
-            ds.className = `text-4xl font-black ${tSaldo > 0 ? 'text-green-500' : (tSaldo < 0 ? 'text-red-500' : 'text-slate-400')}`;
+            const s = document.getElementById('dash-saldo');
+            s.textContent = (tSaldo >= 0 ? '+' : '-') + convHora(tSaldo) + 'h';
+            s.className = `text-4xl font-black ${tSaldo >= 0 ? 'text-green-500' : 'text-red-500'}`;
         };
 
-        // UI Clock
         setInterval(() => {
-            const a = new Date();
-            document.getElementById('txt-hora').textContent = a.toLocaleTimeString('pt-PT');
-            document.getElementById('txt-data').textContent = a.toLocaleDateString('pt-PT', { weekday: 'long', day: '2-digit', month: 'short' });
+            const n = new Date();
+            document.getElementById('txt-hora').textContent = n.toLocaleTimeString('pt-PT');
+            document.getElementById('txt-data').textContent = n.toLocaleDateString('pt-PT', { weekday: 'long', day: '2-digit', month: 'short' });
         }, 1000);
 
-        const showModal = (t, m, callback, showCancel = false, confirmClass = "bg-blue-600 hover:bg-blue-700") => {
-            document.getElementById('modal-title').textContent = t;
-            document.getElementById('modal-message').textContent = m;
-            document.getElementById('custom-modal').classList.remove('hidden');
-            
-            const cBtn = document.getElementById('modal-confirm-btn');
-            cBtn.className = `flex-1 py-2.5 rounded-xl font-bold text-white shadow-lg transition ${confirmClass}`;
-            
-            if (callback) {
-                cBtn.onclick = callback;
-                if (showCancel) document.getElementById('modal-cancel-btn').classList.remove('hidden');
-                else document.getElementById('modal-cancel-btn').classList.add('hidden');
-                cBtn.textContent = "Confirmar";
-            } else {
-                cBtn.onclick = closeModal;
-                cBtn.textContent = "OK";
-                document.getElementById('modal-cancel-btn').classList.add('hidden');
-            }
-        };
-
-        window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
         window.formatarInputHora = (i) => {
             let v = i.value.replace(/\D/g, '');
             if (v.length > 2) v = v.substring(0, 2) + ':' + v.substring(2, 4);
             i.value = v;
         };
         window.toggleDarkMode = () => document.documentElement.classList.toggle('dark');
-        window.onload = () => {
-            document.getElementById('in-data').value = new Date().toISOString().split('T')[0];
-        };
+        window.closeModal = () => document.getElementById('custom-modal').classList.add('hidden');
+        window.onload = () => document.getElementById('in-data').value = new Date().toISOString().split('T')[0];
     </script>
 </body>
 </html>
